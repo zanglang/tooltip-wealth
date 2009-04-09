@@ -1,0 +1,9 @@
+## Interface: 30000
+## Author: Jerry Chong
+## Version: 0.1
+## Title: TinyTipWealth
+## Dependencies: TinyTip
+## LoadManagers: AddonLoader
+## X-LoadOn-Always: delayed
+
+core.lua
