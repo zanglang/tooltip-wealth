@@ -1,29 +1,46 @@
+--[[
+	TinyTip Wealth v0.1 - by Jerry Chong. <zanglang@gmail.com>
+	
+	0.1 - Initial version
+]]--
+
+--------------------------------------------
+-- Initializing and variables
+--------------------------------------------
 
 if not TinyTip then return end
-TinyTipWealth = LibStub("AceAddon-3.0"):NewAddon("TinyTipWealth", "AceEvent-3.0")
+TinyTipWealth = CreateFrame("Frame")
+TinyTipWealth:SetScript("OnEvent", function(self, event, ...)
+	if self[event] then
+		return self[event](self, event, ...)
+	end
+end)
+TinyTipWealth:RegisterEvent("ADDON_LOADED")
 
 local GameTooltip = _G.GameTooltip
 local currentUnit = nil
 local readyFlag = false
-local db
 
 local MOST_GOLD_OWNED = "334"
 local TOTAL_GOLD_ACQUIRED = "328"
 
+--------------------------------------------
+-- DB Settings
+--------------------------------------------
+
 local defaults = {
-	profile = {
-		WealthType = MOST_GOLD_OWNED,
-		DisableEnemyFaction = true,
-		DisableInCombat = true,
-		ShowCoins = true,
-	}
+	WealthType = MOST_GOLD_OWNED,
+	DisableEnemyFaction = true,
+	DisableInCombat = true,
+	ShowCoins = true,
 }
+local db = defaults
 
 local options = {
 	type = "group",
 	name = "TinyTipWealth",
-	get = function( k ) return db[k.arg] end,
-	set = function( k, v ) db[k.arg] = v end,
+	get = function(k) return TinyTipWealthDB[k.arg] end,
+	set = function(k, v) TinyTipWealthDB[k.arg] = v end,
 	args = {
 		desc = {
 			type = "description", order = 0,
@@ -64,6 +81,10 @@ local options = {
 	}
 }
 
+--------------------------------------------
+-- Tooltip Formatting and Display
+--------------------------------------------
+
 local FormatMoneyPattern = {
 	["|TInterface\\MoneyFrame\\UI-GoldIcon:0:0:2:0|t"] = "g",
 	["|TInterface\\MoneyFrame\\UI-SilverIcon:0:0:2:0|t"] = "s",
@@ -83,12 +104,16 @@ function TinyTipWealth:INSPECT_ACHIEVEMENT_READY()
 	if GameTooltip:GetUnit() == currentUnit then
 		GameTooltip:AddLine("Wealth: ".. self:FormatMoney(GetComparisonStatistic(db.WealthType)))
 		GameTooltip:Show()
-	else
-		print("different unit")
+	-- else
+		-- print("different unit")
 	end
 	currentUnit = nil
 	readyFlag = true
 end
+
+--------------------------------------------
+-- Events
+--------------------------------------------
 
 local function TinyTipWealth_InspectUnit(unit)
 	if not UnitExists(unit) or not UnitIsPlayer(unit) or
@@ -104,11 +129,19 @@ local function TinyTipWealth_InspectUnit(unit)
 	end
 end
 
-function TinyTipWealth:OnInitialize()
-	self.db = LibStub("AceDB-3.0"):New("TinyTipWealth", defaults, "Default")
-	db = self.db.profile
+function TinyTipWealth:ADDON_LOADED(event, name)
+	if name ~= "TinyTipWealth" then return end
+	self:UnregisterEvent("ADDON_LOADED")
 	
-	LibStub("AceConfigRegistry-3.0"):RegisterOptionsTable("TinyTipWealth", options, nil)
+	TinyTipWealthDB = TinyTipWealthDB or {}
+	db = TinyTipWealthDB
+	for name, value in pairs(defaults) do
+		if db[name] == nil then
+			 db[name] = value
+		end
+	end
+
+	LibStub("AceConfigRegistry-3.0"):RegisterOptionsTable("TinyTipWealth", options)
 	LibStub("AceConfigDialog-3.0"):AddToBlizOptions("TinyTipWealth", "TinyTip Wealth")
 	
 	self:RegisterEvent("INSPECT_ACHIEVEMENT_READY")
