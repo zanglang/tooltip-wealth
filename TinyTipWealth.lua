@@ -93,24 +93,31 @@ local options = {
 -- Tooltip Formatting and player inspecting
 --------------------------------------------
 
+local doubleLine = false
+if TipTop or CowTip then
+	doubleLine = true
+end
+
 local FormatMoneyPattern = {
 	["|TInterface\\MoneyFrame\\UI-GoldIcon:0:0:2:0|t"] = "g",
 	["|TInterface\\MoneyFrame\\UI-SilverIcon:0:0:2:0|t"] = "s",
 	["|TInterface\\MoneyFrame\\UI-CopperIcon:0:0:2:0|t"] = "c"
 }
 
-function TinyTipWealth:FormatMoney(money)
-	if not db.ShowCoins then
-		return string.gsub(money, "|TInterface\\MoneyFrame\\UI%-%a+Icon:0:0:2:0|t", FormatMoneyPattern)
-	-- else
-	end
-	return money
-end
-
 function TinyTipWealth:INSPECT_ACHIEVEMENT_READY()
 	-- print("INSPECT_ACHIEVEMENT_READY")
+	
 	if GameTooltip:GetUnit() == currentUnit then
-		GameTooltip:AddLine("Wealth: ".. self:FormatMoney(GetComparisonStatistic(db.WealthType)))
+		local money = GetComparisonStatistic(db.WealthType)
+		if not db.ShowCoins then
+			money = string.gsub(money, "|TInterface\\MoneyFrame\\UI%-%a+Icon:0:0:2:0|t", FormatMoneyPattern)
+		end
+		
+		if not doubleLine then
+			GameTooltip:AddLine("Wealth: " .. money)
+		else
+			GameTooltip:AddDoubleLine("Wealth: ", money)
+		end
 		GameTooltip:Show()
 	-- else
 		-- print("different unit")
@@ -119,7 +126,7 @@ function TinyTipWealth:INSPECT_ACHIEVEMENT_READY()
 	readyFlag = true
 end
 
-local function TinyTipWealth_InspectUnit(unit)
+local function InspectUnit(unit)
 	if not UnitExists(unit) or not UnitIsPlayer(unit) or
 			(db.DisableInCombat and InCombatLockdown()) or
 			(db.DisableEnemyFaction and not UnitIsFriend("player", unit)) or
@@ -136,7 +143,7 @@ end
 
 function TinyTipWealth:UPDATE_MOUSEOVER_UNIT()
 	-- print("update mouseover")
-	TinyTipWealth_InspectUnit("mouseover")
+	InspectUnit("mouseover")
 end
 
 --------------------------------------------
@@ -174,7 +181,7 @@ function TinyTipWealth:ADDON_LOADED(event, name)
 	
 	-- check for alternate tooltip addons
 	if TinyTip then
-		TinyTip.HookOnTooltipSetUnit(GameTooltip, TinyTipWealth_InspectUnit)
+		TinyTip.HookOnTooltipSetUnit(GameTooltip, InspectUnit)
 	else
 		self:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
 	end

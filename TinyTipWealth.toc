@@ -5,7 +5,7 @@
 ## Author: Jerry Chong
 ## X-Email: zanglang@gmail.com
 ## X-Feedback: http://www.wowace.com/projects/tinytip-wealth/
-## OptionalDeps: TinyTip
+## OptionalDeps: TinyTip, TipTac, TipTop, CowTip
 ## SavedVariables: TinyTipWealthDB
 
 #@no-lib-strip@
