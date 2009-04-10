@@ -8,7 +8,6 @@
 -- Initializing and variables
 --------------------------------------------
 
-if not TinyTip then return end
 TinyTipWealth = CreateFrame("Frame")
 TinyTipWealth:SetScript("OnEvent", function(self, event, ...)
 	if self[event] then
@@ -20,6 +19,7 @@ TinyTipWealth:RegisterEvent("ADDON_LOADED")
 local GameTooltip = _G.GameTooltip
 local currentUnit = nil
 local readyFlag = false
+local cityFlag = false
 
 local MOST_GOLD_OWNED = "334"
 local TOTAL_GOLD_ACQUIRED = "328"
@@ -32,6 +32,7 @@ local defaults = {
 	WealthType = MOST_GOLD_OWNED,
 	DisableEnemyFaction = true,
 	DisableInCombat = true,
+	OnlyInCity = false,
 	ShowCoins = true,
 }
 local db = defaults
@@ -71,18 +72,25 @@ local options = {
 			arg = "DisableInCombat",
 			order = 3, width = "full",
 		},
+		OnlyInCity = {
+			name = "Enable only in cities",
+			desc = "Enable checking only when inside a major city.",
+			type = "toggle",
+			arg = "OnlyInCity",
+			order = 4, width = "full",
+		},
 		ShowCoins = {
 			name = "Show wealth as coins",
 			desc = "Displays wealth with coin graphic if enabled. Formatted as plain text if disabled.",
 			type = "toggle",
 			arg = "ShowCoins",
-			order = 4, width = "full",
+			order = 5, width = "full",
 		}
 	}
 }
 
 --------------------------------------------
--- Tooltip Formatting and Display
+-- Tooltip Formatting and player inspecting
 --------------------------------------------
 
 local FormatMoneyPattern = {
@@ -111,14 +119,11 @@ function TinyTipWealth:INSPECT_ACHIEVEMENT_READY()
 	readyFlag = true
 end
 
---------------------------------------------
--- Events
---------------------------------------------
-
 local function TinyTipWealth_InspectUnit(unit)
 	if not UnitExists(unit) or not UnitIsPlayer(unit) or
 			(db.DisableInCombat and InCombatLockdown()) or
-			(db.DisableEnemyFaction and not UnitIsFriend("player", unit)) then return end
+			(db.DisableEnemyFaction and not UnitIsFriend("player", unit)) or
+			(db.OnlyInCity and not cityFlag) then return end
 	-- print("mouseovered ".. UnitName(unit))
 	
 	if readyFlag then
@@ -127,6 +132,26 @@ local function TinyTipWealth_InspectUnit(unit)
 		currentUnit = UnitName(unit)
 		readyFlag = false
 	end
+end
+
+function TinyTipWealth:UPDATE_MOUSEOVER_UNIT()
+	-- print("update mouseover")
+	TinyTipWealth_InspectUnit("mouseover")
+end
+
+--------------------------------------------
+-- Events
+--------------------------------------------
+
+function TinyTipWealth:ZONE_CHANGED_NEW_AREA(event)
+	local channels = {EnumerateServerChannels()}
+	for _, chan in pairs(channels) do
+		if chan == "Trade" then
+			cityFlag = true
+			return
+		end
+	end
+	cityFlag = false
 end
 
 function TinyTipWealth:ADDON_LOADED(event, name)
@@ -140,11 +165,19 @@ function TinyTipWealth:ADDON_LOADED(event, name)
 			 db[name] = value
 		end
 	end
-
 	LibStub("AceConfigRegistry-3.0"):RegisterOptionsTable("TinyTipWealth", options)
 	LibStub("AceConfigDialog-3.0"):AddToBlizOptions("TinyTipWealth", "TinyTip Wealth")
 	
-	self:RegisterEvent("INSPECT_ACHIEVEMENT_READY")
-	TinyTip.HookOnTooltipSetUnit(GameTooltip, TinyTipWealth_InspectUnit)
+	self:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+	self:RegisterEvent("INSPECT_ACHIEVEMENT_READY")	
+	TinyTipWealth:ZONE_CHANGED_NEW_AREA()
+	
+	-- check for alternate tooltip addons
+	if TinyTip then
+		TinyTip.HookOnTooltipSetUnit(GameTooltip, TinyTipWealth_InspectUnit)
+	else
+		self:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
+	end
+	
 	readyFlag = true
 end
