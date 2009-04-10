@@ -1,11 +1,12 @@
 ## Interface: 30000
-## Author: Jerry Chong
-## Version: 0.1
 ## Title: TinyTipWealth
+## Notes: Sneakily inspect how much gold your mouseover target has made so far.
+## Version: 0.1
+## Author: Jerry Chong
+## X-Email: zanglang@gmail.com
+## X-Feedback: http://www.wowace.com/projects/tinytip-wealth/
 ## Dependencies: TinyTip
 ## SavedVariables: TinyTipWealth
-## LoadManagers: AddonLoader
-## X-LoadOn-Always: delayed
 
 #@no-lib-strip@
 Libs\LibStub\LibStub.lua
