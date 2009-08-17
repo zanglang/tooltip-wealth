@@ -2,6 +2,7 @@
 	TinyTip Wealth v0.1 - by Jerry Chong. <zanglang@gmail.com>
 	
 	0.1 - Initial version
+	0.2 - Caching
 ]]--
 
 --------------------------------------------
@@ -34,6 +35,7 @@ local defaults = {
 	DisableInCombat = true,
 	OnlyInCity = false,
 	ShowCoins = true,
+	Cache = { player = nil, money = 0 }
 }
 local db = defaults
 
@@ -104,21 +106,25 @@ local FormatMoneyPattern = {
 	["|TInterface\\MoneyFrame\\UI-CopperIcon:0:0:2:0|t"] = "c"
 }
 
+local function ShowTooltip(money)
+	if not doubleLine then
+		GameTooltip:AddLine("Wealth: " .. money)
+	else
+		GameTooltip:AddDoubleLine("Wealth: ", money)
+	end
+	GameTooltip:Show()
+end
+
 function TinyTipWealth:INSPECT_ACHIEVEMENT_READY()
-	-- print("INSPECT_ACHIEVEMENT_READY")
-	
+	-- print("INSPECT_ACHIEVEMENT_READY")	
 	if GameTooltip:GetUnit() == currentUnit then
 		local money = GetComparisonStatistic(db.WealthType)
 		if not db.ShowCoins then
 			money = string.gsub(money, "|TInterface\\MoneyFrame\\UI%-%a+Icon:0:0:2:0|t", FormatMoneyPattern)
 		end
-		
-		if not doubleLine then
-			GameTooltip:AddLine("Wealth: " .. money)
-		else
-			GameTooltip:AddDoubleLine("Wealth: ", money)
-		end
-		GameTooltip:Show()
+		db.Cache.player = currentUnit
+		db.Cache.money = money		
+		ShowTooltip(money)
 	-- else
 		-- print("different unit")
 	end
@@ -132,6 +138,11 @@ local function InspectUnit(unit)
 			(db.DisableEnemyFaction and not UnitIsFriend("player", unit)) or
 			(db.OnlyInCity and not cityFlag) then return end
 	-- print("mouseovered ".. UnitName(unit))
+	
+	if db.Cache.player == UnitName(unit) then
+		ShowTooltip(db.Cache.money) -- cache hit
+		return
+	end
 	
 	if readyFlag then
 		ClearAchievementComparisonUnit()
