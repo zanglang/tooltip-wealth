@@ -1,5 +1,5 @@
 --[[
-	TinyTip Wealth v0.1 - by Jerry Chong. <zanglang@gmail.com>
+	Tooltip Wealth v0.1 - by Jerry Chong. <zanglang@gmail.com>
 	
 	0.1 - Initial version
 	0.2 - Caching

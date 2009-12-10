@@ -1,5 +1,5 @@
-## Interface: 30200
-## Title: TinyTipWealth
+## Interface: 30300
+## Title: Tooltip Wealth
 ## Notes: Sneakily inspect how much gold your mouseover target has made so far.
 ## Version: 0.2
 ## Author: Jerry Chong
