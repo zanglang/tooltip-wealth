@@ -116,18 +116,20 @@ local function ShowTooltip(money)
 end
 
 function TinyTipWealth:INSPECT_ACHIEVEMENT_READY()
-	-- print("INSPECT_ACHIEVEMENT_READY")	
+	print("INSPECT_ACHIEVEMENT_READY")
 	if GameTooltip:GetUnit() == currentUnit then
 		local money = GetComparisonStatistic(db.WealthType)
 		if not db.ShowCoins then
 			money = string.gsub(money, "|TInterface\\MoneyFrame\\UI%-%a+Icon:0:0:2:0|t", FormatMoneyPattern)
 		end
 		db.Cache.player = currentUnit
-		db.Cache.money = money		
+		db.Cache.money = money
 		ShowTooltip(money)
-	-- else
-		-- print("different unit")
+	else
+		print("different unit")
 	end
+	ClearAchievementComparisonUnit()
+	ClearInspectPlayer()
 	currentUnit = nil
 	readyFlag = true
 end
@@ -139,16 +141,27 @@ local function InspectUnit(unit)
 			(db.OnlyInCity and not cityFlag) then return end
 	-- print("mouseovered ".. UnitName(unit))
 	
+	if not CheckInteractDistance(unit, 1) then
+		print("too far")
+		return
+	elseif not CanInspect(unit) then
+		print("not allowed")
+		return
+	end
+	
 	if db.Cache.player == UnitName(unit) then
 		ShowTooltip(db.Cache.money) -- cache hit
+		print("cache hit")
 		return
 	end
 	
 	if readyFlag then
-		ClearAchievementComparisonUnit()
 		SetAchievementComparisonUnit(unit)
 		currentUnit = UnitName(unit)
+		print("request achievement comparison")
 		readyFlag = false
+	else
+		print("not ready yet")
 	end
 end
 
@@ -165,10 +178,12 @@ function TinyTipWealth:ZONE_CHANGED_NEW_AREA(event)
 	local channels = {EnumerateServerChannels()}
 	for _, chan in pairs(channels) do
 		if chan == "Trade" then
+			print("In city")
 			cityFlag = true
 			return
 		end
 	end
+	print("outside city")
 	cityFlag = false
 end
 
@@ -197,5 +212,6 @@ function TinyTipWealth:ADDON_LOADED(event, name)
 		self:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
 	end
 	
+	print("TinyTipWealth loaded.")
 	readyFlag = true
 end

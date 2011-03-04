@@ -1,7 +1,7 @@
-## Interface: 30300
+## Interface: 40000
 ## Title: Tooltip Wealth
 ## Notes: Sneakily inspect how much gold your mouseover target has made so far.
-## Version: 0.2
+## Version: 0.3
 ## Author: Jerry Chong
 ## X-Email: zanglang@gmail.com
 ## X-Category: Tooltips
