@@ -1,8 +1,9 @@
 --[[
-	Tooltip Wealth v0.1 - by Jerry Chong. <zanglang@gmail.com>
+	Tooltip Wealth v0.3 - by Jerry Chong. <zanglang@gmail.com>
 	
 	0.1 - Initial version
 	0.2 - Caching
+	0.3 - Various bugfixes
 ]]--
 
 --------------------------------------------
@@ -21,6 +22,7 @@ local GameTooltip = _G.GameTooltip
 local currentUnit = nil
 local readyFlag = false
 local cityFlag = false
+local playerName = nil
 
 local MOST_GOLD_OWNED = "334"
 local TOTAL_GOLD_ACQUIRED = "328"
@@ -41,7 +43,7 @@ local db = defaults
 
 local options = {
 	type = "group",
-	name = "TinyTipWealth",
+	name = "ToolTipWealth",
 	get = function(k) return TinyTipWealthDB[k.arg] end,
 	set = function(k, v) TinyTipWealthDB[k.arg] = v end,
 	args = {
@@ -107,6 +109,21 @@ local FormatMoneyPattern = {
 }
 
 local function ShowTooltip(money)
+	-- formatting/presentation
+	if money:sub(1, 1) == "-" then
+		-- print("Money before calculate: " .. money)
+		money = money:gsub("|TInterface\\MoneyFrame\\UI%-%a+Icon:0:0:2:0|t", "")
+		-- calculate spillover
+		local max = 2014179932
+		money = math.abs(math.abs(money) - max) + max
+		money = math.floor(money/10000) .. "|TInterface\\MoneyFrame\\UI-GoldIcon:0:0:2:0|t " ..
+				math.floor(money%10000/100) .. "|TInterface\\MoneyFrame\\UI-SilverIcon:0:0:2:0|t " ..
+				(money%100) .. "|TInterface\\MoneyFrame\\UI-CopperIcon:0:0:2:0|t"
+	end
+	if not db.ShowCoins then
+		money = string.gsub(money, "|TInterface\\MoneyFrame\\UI%-%a+Icon:0:0:2:0|t", FormatMoneyPattern)
+	end
+	
 	if not doubleLine then
 		GameTooltip:AddLine("Wealth: " .. money)
 	else
@@ -119,9 +136,6 @@ function TinyTipWealth:INSPECT_ACHIEVEMENT_READY()
 	-- print("INSPECT_ACHIEVEMENT_READY")
 	if GameTooltip:GetUnit() == currentUnit then
 		local money = GetComparisonStatistic(db.WealthType)
-		if not db.ShowCoins then
-			money = string.gsub(money, "|TInterface\\MoneyFrame\\UI%-%a+Icon:0:0:2:0|t", FormatMoneyPattern)
-		end
 		db.Cache.player = currentUnit
 		db.Cache.money = money
 		ShowTooltip(money)
@@ -141,23 +155,28 @@ local function InspectUnit(unit)
 			(db.OnlyInCity and not cityFlag) then return end
 	-- print("mouseovered ".. UnitName(unit))
 	
-	if not CheckInteractDistance(unit, 1) then
-		-- print("too far")
-		return
-	elseif not CanInspect(unit) then
-		-- print("not allowed")
+	local unitName = UnitName(unit)
+	if unitName == playerName then
+		ShowTooltip(GetStatistic(db.WealthType))
 		return
 	end
 	
-	if db.Cache.player == UnitName(unit) then
+	if not CheckInteractDistance(unit, 1) then
+		ShowTooltip("too far")
+		return
+	elseif not CanInspect(unit) then
+		ShowTooltip("not allowed")
+		return
+	end
+	
+	if db.Cache.player == unitName then
 		ShowTooltip(db.Cache.money) -- cache hit
-		-- print("cache hit")
 		return
 	end
 	
 	if readyFlag then
 		SetAchievementComparisonUnit(unit)
-		currentUnit = UnitName(unit)
+		currentUnit = unitName
 		-- print("request achievement comparison")
 		readyFlag = false
 	-- else
@@ -185,6 +204,9 @@ function TinyTipWealth:ZONE_CHANGED_NEW_AREA(event)
 	end
 	-- print("outside city")
 	cityFlag = false
+	if not readyFlag then
+		readyFlag = true
+	end
 end
 
 function TinyTipWealth:ADDON_LOADED(event, name)
@@ -198,8 +220,8 @@ function TinyTipWealth:ADDON_LOADED(event, name)
 			 db[name] = value
 		end
 	end
-	LibStub("AceConfigRegistry-3.0"):RegisterOptionsTable("TinyTipWealth", options)
-	LibStub("AceConfigDialog-3.0"):AddToBlizOptions("TinyTipWealth", "TinyTip Wealth")
+	LibStub("AceConfigRegistry-3.0"):RegisterOptionsTable("ToolTipWealth", options)
+	LibStub("AceConfigDialog-3.0"):AddToBlizOptions("ToolTipWealth", "Tooltip Wealth")
 	
 	self:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 	self:RegisterEvent("INSPECT_ACHIEVEMENT_READY")	
@@ -213,4 +235,5 @@ function TinyTipWealth:ADDON_LOADED(event, name)
 	end
 	
 	readyFlag = true
+	playerName = UnitName("player")
 end
