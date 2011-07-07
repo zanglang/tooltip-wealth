@@ -26,6 +26,7 @@ local playerName = nil
 
 local MOST_GOLD_OWNED = "334"
 local TOTAL_GOLD_ACQUIRED = "328"
+local AVG_EARNED_DAILY = "753"
 
 --------------------------------------------
 -- DB Settings
@@ -56,8 +57,9 @@ local options = {
 			desc = "Use this statistic for querying wealth",
 			type = "select",
 			values = {
-				[TOTAL_GOLD_ACQUIRED] = "Total gold acquired",
-				[MOST_GOLD_OWNED] = "Most gold ever owned"
+				[TOTAL_GOLD_ACQUIRED] = "Total gold ever acquired",
+				[MOST_GOLD_OWNED] = "Most gold ever owned",
+				[AVG_EARNED_DAILY] = "Average gold earned per day"
 			},
 			arg = "WealthType",
 			order = 1,
@@ -114,7 +116,7 @@ local function ShowTooltip(money)
 		-- print("Money before calculate: " .. money)
 		money = money:gsub("|TInterface\\MoneyFrame\\UI%-%a+Icon:0:0:2:0|t", "")
 		-- calculate spillover
-		local max = 2014179932
+		local max = 2147483648
 		money = math.abs(math.abs(money) - max) + max
 		money = math.floor(money/10000) .. "|TInterface\\MoneyFrame\\UI-GoldIcon:0:0:2:0|t " ..
 				math.floor(money%10000/100) .. "|TInterface\\MoneyFrame\\UI-SilverIcon:0:0:2:0|t " ..
@@ -194,6 +196,10 @@ end
 --------------------------------------------
 
 function TinyTipWealth:ZONE_CHANGED_NEW_AREA(event)
+	if not readyFlag then
+		readyFlag = true
+	end
+	
 	local channels = {EnumerateServerChannels()}
 	for _, chan in pairs(channels) do
 		if chan == "Trade" then
@@ -204,9 +210,6 @@ function TinyTipWealth:ZONE_CHANGED_NEW_AREA(event)
 	end
 	-- print("outside city")
 	cityFlag = false
-	if not readyFlag then
-		readyFlag = true
-	end
 end
 
 function TinyTipWealth:ADDON_LOADED(event, name)
