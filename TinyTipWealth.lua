@@ -181,7 +181,6 @@ function TinyTipWealth:InspectUnit(unit)
 	end
 	
 	if readyFlag then
-		ClearAchievementComparisonUnit();
 		if (AchievementFrameComparison) then
 			AchievementFrameComparison:UnregisterEvent("INSPECT_ACHIEVEMENT_READY")
 		end
@@ -246,7 +245,7 @@ function TinyTipWealth:ADDON_LOADED(event, name)
 	
 	-- check for alternate tooltip addons
 	if TinyTip then
-		TinyTip.HookOnTooltipSetUnit(GameTooltip, InspectUnit)
+		TinyTip.HookOnTooltipSetUnit(GameTooltip, TinyTipWealth.InspectUnit)
 	else
 		self:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
 	end
