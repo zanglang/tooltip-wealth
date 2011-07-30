@@ -144,13 +144,17 @@ function TinyTipWealth:INSPECT_ACHIEVEMENT_READY()
 	-- else
 		-- print("different unit")
 	end
+	self:UnregisterEvent("INSPECT_ACHIEVEMENT_READY");
+	if (AchievementFrameComparison) then
+		AchievementFrameComparison:RegisterEvent("INSPECT_ACHIEVEMENT_READY")
+	end
 	ClearAchievementComparisonUnit()
 	ClearInspectPlayer()
 	currentUnit = nil
 	readyFlag = true
 end
 
-local function InspectUnit(unit)
+function TinyTipWealth:InspectUnit(unit)
 	if not UnitExists(unit) or not UnitIsPlayer(unit) or
 			(db.DisableInCombat and InCombatLockdown()) or
 			(db.DisableEnemyFaction and not UnitIsFriend("player", unit)) or
@@ -177,6 +181,11 @@ local function InspectUnit(unit)
 	end
 	
 	if readyFlag then
+		ClearAchievementComparisonUnit();
+		if (AchievementFrameComparison) then
+			AchievementFrameComparison:UnregisterEvent("INSPECT_ACHIEVEMENT_READY")
+		end
+		self:RegisterEvent("INSPECT_ACHIEVEMENT_READY")
 		SetAchievementComparisonUnit(unit)
 		currentUnit = unitName
 		-- print("request achievement comparison")
@@ -188,7 +197,7 @@ end
 
 function TinyTipWealth:UPDATE_MOUSEOVER_UNIT()
 	-- print("update mouseover")
-	InspectUnit("mouseover")
+	TinyTipWealth:InspectUnit("mouseover")
 end
 
 --------------------------------------------
@@ -200,6 +209,11 @@ function TinyTipWealth:ZONE_CHANGED_NEW_AREA(event)
 		readyFlag = true
 	end
 	
+	self:UnregisterEvent("INSPECT_ACHIEVEMENT_READY");
+	if (AchievementFrameComparison) then
+		AchievementFrameComparison:RegisterEvent("INSPECT_ACHIEVEMENT_READY")
+	end
+	
 	local channels = {EnumerateServerChannels()}
 	for _, chan in pairs(channels) do
 		if chan == "Trade" then
@@ -208,6 +222,7 @@ function TinyTipWealth:ZONE_CHANGED_NEW_AREA(event)
 			return
 		end
 	end
+	
 	-- print("outside city")
 	cityFlag = false
 end
@@ -227,7 +242,6 @@ function TinyTipWealth:ADDON_LOADED(event, name)
 	LibStub("AceConfigDialog-3.0"):AddToBlizOptions("ToolTipWealth", "Tooltip Wealth")
 	
 	self:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-	self:RegisterEvent("INSPECT_ACHIEVEMENT_READY")	
 	TinyTipWealth:ZONE_CHANGED_NEW_AREA()
 	
 	-- check for alternate tooltip addons
