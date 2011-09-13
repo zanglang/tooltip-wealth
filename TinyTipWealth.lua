@@ -27,6 +27,7 @@ local playerName = nil
 local MOST_GOLD_OWNED = "334"
 local TOTAL_GOLD_ACQUIRED = "328"
 local AVG_EARNED_DAILY = "753"
+local EVERYTHING = "ALL_THE_THINGS"
 
 --------------------------------------------
 -- DB Settings
@@ -60,6 +61,7 @@ local options = {
 				[TOTAL_GOLD_ACQUIRED] = "Total gold ever acquired",
 				[MOST_GOLD_OWNED] = "Most gold ever owned",
 				[AVG_EARNED_DAILY] = "Average gold earned/day"
+				[EVERYTHING] = "All of above",
 			},
 			arg = "WealthType",
 			order = 1,
@@ -112,7 +114,7 @@ local FormatMoneyPattern = {
 
 local function ShowTooltip(money)
 	-- formatting/presentation
-	if money:sub(1, 1) == "-" then
+	if money:sub(1, 1) == "-" and money:sub(2, 2) ~= "-" then
 		-- print("Money before calculate: " .. money)
 		money = money:gsub("|TInterface\\MoneyFrame\\UI%-%a+Icon:0:0:2:0|t", "")
 		-- calculate spillover
@@ -137,10 +139,19 @@ end
 function TinyTipWealth:INSPECT_ACHIEVEMENT_READY()
 	-- print("INSPECT_ACHIEVEMENT_READY")
 	if GameTooltip:GetUnit() == currentUnit then
-		local money = GetComparisonStatistic(db.WealthType)
-		db.Cache.player = currentUnit
-		db.Cache.money = money
-		ShowTooltip(money)
+		local function Query(id)
+			local money = GetComparisonStatistic(id)
+			db.Cache.player = currentUnit
+			db.Cache.money = money
+			ShowTooltip(money)
+		end
+		if db.WealthType ~= 9999 then
+			Query(db.WealthType)
+		else
+			Query(TOTAL_GOLD_ACQUIRED)
+			Query(MOST_GOLD_OWNED)
+			Query(AVG_EARNED_DAILY)
+		end
 	-- else
 		-- print("different unit")
 	end
