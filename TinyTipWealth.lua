@@ -60,7 +60,7 @@ local options = {
 			values = {
 				[TOTAL_GOLD_ACQUIRED] = "Total gold ever acquired",
 				[MOST_GOLD_OWNED] = "Most gold ever owned",
-				[AVG_EARNED_DAILY] = "Average gold earned/day"
+				[AVG_EARNED_DAILY] = "Average gold earned/day",
 				[EVERYTHING] = "All of above",
 			},
 			arg = "WealthType",
