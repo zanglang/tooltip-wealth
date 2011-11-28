@@ -1,4 +1,4 @@
-## Interface: 40200
+## Interface: 40300
 ## Title: Tooltip Wealth
 ## Notes: Sneakily inspect how much gold your mouseover target has made so far.
 ## Version: 0.3.3
